@@ -1,0 +1,26 @@
+/* src/index.css */
+
+/* Reset / base */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  background-color: #f5f5f5;
+}
+
+/* IMPORTANT: root must use full width, no max-width, no auto margin */
+#root {
+  width: 100%;
+  min-height: 100vh;
+}

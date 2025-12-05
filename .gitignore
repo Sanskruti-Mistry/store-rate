@@ -1,0 +1,34 @@
+# Node
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Logs
+logs
+*.log
+*.log.*
+
+# Env
+.env
+backend/.env
+frontend/.env
+
+#gitignore
+backend/.gitignore
+frontend/.gitignore
+
+# Build
+dist
+build
+backend/dist
+frontend/dist
+
+# Prisma
+backend/prisma/dev.db-journal
+
+.DS_Store
+backend/.DS_Store
+frontend/.DS_Store
+.DS_Store
