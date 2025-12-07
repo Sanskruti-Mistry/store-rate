@@ -1,25 +1,20 @@
-// prisma/schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
-
-// --- Enum for user roles ---
 enum Role {
-  ADMIN
   USER
+  ADMIN
   OWNER
 }
 
-// --- User model ---
 model User {
-  id           Int      @id @default(autoincrement())
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
   name         String
   email        String   @unique
   passwordHash String
@@ -27,39 +22,31 @@ model User {
   role         Role     @default(USER)
   stores       Store[]  @relation("OwnerStores")
   ratings      Rating[]
-
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
 
-// --- Store model ---
 model Store {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name      String
   email     String?  @unique
   address   String
-
-  ownerId   Int?
+  ownerId   String?  @db.ObjectId
   owner     User?    @relation("OwnerStores", fields: [ownerId], references: [id])
-
   ratings   Rating[]
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-// --- Rating model ---
 model Rating {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   value     Int
-  userId    Int
-  storeId   Int
-
+  userId    String   @db.ObjectId
+  storeId   String   @db.ObjectId
   user      User     @relation(fields: [userId], references: [id])
   store     Store    @relation(fields: [storeId], references: [id])
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([userId, storeId]) // one rating per user per store
+  @@unique([userId, storeId])
 }

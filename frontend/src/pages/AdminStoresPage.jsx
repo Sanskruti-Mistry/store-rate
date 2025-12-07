@@ -5,7 +5,6 @@ import { adminGetStores, adminCreateStore } from "../api/client";
 
 export default function AdminStoresPage() {
   const { token } = useAuth();
-
   const [stores, setStores] = useState([]);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -61,12 +60,10 @@ export default function AdminStoresPage() {
     e.preventDefault();
     loadStores(1);
   };
-
   const handlePageChange = (newPage) => {
     if (newPage < 1 || newPage > pagination.totalPages) return;
     loadStores(newPage);
   };
-
   const handleNewStoreChange = (e) => {
     setNewStore((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
@@ -84,12 +81,7 @@ export default function AdminStoresPage() {
         ownerId: newStore.ownerId ? Number(newStore.ownerId) : null,
       };
       await adminCreateStore(token, payload);
-      setNewStore({
-        name: "",
-        email: "",
-        address: "",
-        ownerId: "",
-      });
+      setNewStore({ name: "", email: "", address: "", ownerId: "" });
       loadStores(1);
     } catch (err) {
       console.error(err);
@@ -100,103 +92,65 @@ export default function AdminStoresPage() {
   };
 
   return (
-    <div>
-      <h2 style={{ marginBottom: "8px" }}>Admin – Stores</h2>
-      <p style={{ marginBottom: "12px", color: "#555", fontSize: "13px" }}>
-        Create and manage stores. <br />
-        <span style={{ fontSize: "12px" }}>
-          To assign an owner, provide an <code>ownerId</code> that belongs to a
-          user with role <code>OWNER</code> (see Admin Users page).
-        </span>
-      </p>
+    <div style={styles.container}>
+      <h2 style={styles.pageHeader}>Store Management</h2>
 
-      {/* Create store form */}
-      <details
-        open
-        style={{
-          marginBottom: "16px",
-          borderRadius: "10px",
-          border: "1px solid #e5e7eb",
-          backgroundColor: "#ffffff",
-        }}
-      >
-        <summary
-          style={{
-            cursor: "pointer",
-            padding: "8px 12px",
-            fontWeight: 500,
-          }}
-        >
-          Create New Store
-        </summary>
-        <div style={{ padding: "12px" }}>
-          <form
-            onSubmit={handleCreateStore}
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-              gap: "8px 12px",
-              alignItems: "flex-start",
-            }}
-          >
-            <div>
-              <label style={labelStyle}>Store Name</label>
+      <details style={styles.detailsCard}>
+        <summary style={styles.summary}>+ Create New Store</summary>
+        <div style={styles.formContent}>
+          <form onSubmit={handleCreateStore} style={styles.createForm}>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Store Name</label>
               <input
                 type="text"
                 name="name"
                 value={newStore.name}
                 onChange={handleNewStoreChange}
-                style={inputStyle}
+                style={styles.input}
                 required
               />
             </div>
-            <div>
-              <label style={labelStyle}>Store Email (optional)</label>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Email (Optional)</label>
               <input
                 type="email"
                 name="email"
                 value={newStore.email}
                 onChange={handleNewStoreChange}
-                style={inputStyle}
+                style={styles.input}
               />
             </div>
-            <div>
-              <label style={labelStyle}>Owner ID (optional)</label>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Owner ID (Optional)</label>
               <input
                 type="number"
                 name="ownerId"
                 value={newStore.ownerId}
                 onChange={handleNewStoreChange}
-                style={inputStyle}
+                style={styles.input}
+                placeholder="User ID of Owner"
               />
-              <div style={helperTextStyle}>
-                Must be the ID of a user with role <code>OWNER</code> (see Admin
-                Users).
-              </div>
             </div>
-
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={labelStyle}>Address</label>
+            <div style={{ ...styles.formGroup, gridColumn: "1/-1" }}>
+              <label style={styles.label}>Address</label>
               <textarea
                 name="address"
                 value={newStore.address}
                 onChange={handleNewStoreChange}
-                style={{ ...inputStyle, height: "60px", resize: "vertical" }}
+                style={styles.textarea}
                 required
               />
             </div>
-
             {createError && (
-              <div style={{ ...errorStyle, gridColumn: "1 / -1" }}>
+              <div style={{ ...styles.errorBox, gridColumn: "1/-1" }}>
                 {createError}
               </div>
             )}
-
-            <div style={{ gridColumn: "1 / -1", marginTop: "4px" }}>
+            <div style={{ gridColumn: "1/-1" }}>
               <button
                 type="submit"
                 disabled={creating}
-                style={buttonStyle("#16a34a", creating)}
+                style={styles.createBtn}
               >
                 {creating ? "Creating..." : "Create Store"}
               </button>
@@ -205,118 +159,93 @@ export default function AdminStoresPage() {
         </div>
       </details>
 
-      {/* Filters & search */}
-      <form
-        onSubmit={handleSearchSubmit}
-        style={{
-          display: "flex",
-          gap: "8px",
-          alignItems: "center",
-          marginBottom: "12px",
-          flexWrap: "wrap",
-        }}
-      >
-        <input
-          type="text"
-          placeholder="Search by name, email, address..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{
-            flex: 1,
-            minWidth: "200px",
-            padding: "8px 10px",
-            borderRadius: "8px",
-            border: "1px solid #d4d4d4",
-            fontSize: "14px",
-          }}
-        />
-        <input
-          type="number"
-          placeholder="Filter by ownerId"
-          value={ownerIdFilter}
-          onChange={(e) => setOwnerIdFilter(e.target.value)}
-          style={{
-            width: "140px",
-            padding: "8px 10px",
-            borderRadius: "8px",
-            border: "1px solid #d4d4d4",
-            fontSize: "14px",
-          }}
-        />
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-          style={selectStyle}
-        >
-          <option value="createdAt">Sort by Created At</option>
-          <option value="name">Sort by Name</option>
-          <option value="email">Sort by Email</option>
-        </select>
-        <select
-          value={sortOrder}
-          onChange={(e) => setSortOrder(e.target.value)}
-          style={selectStyle}
-        >
-          <option value="desc">Desc</option>
-          <option value="asc">Asc</option>
-        </select>
-        <button type="submit" style={buttonStyle("#2563eb")}>
-          Apply
-        </button>
-      </form>
+      <div style={styles.toolbar}>
+        <form onSubmit={handleSearchSubmit} style={styles.toolbarForm}>
+          <input
+            type="text"
+            placeholder="Search stores..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={styles.searchInput}
+          />
+          <input
+            type="number"
+            placeholder="Owner ID"
+            value={ownerIdFilter}
+            onChange={(e) => setOwnerIdFilter(e.target.value)}
+            style={{ ...styles.searchInput, maxWidth: "100px" }}
+          />
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            style={styles.toolbarSelect}
+          >
+            <option value="createdAt">Sort: Date</option>
+            <option value="name">Sort: Name</option>
+            <option value="email">Sort: Email</option>
+          </select>
+          <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+            style={styles.toolbarSelect}
+          >
+            <option value="desc">Desc</option>
+            <option value="asc">Asc</option>
+          </select>
+          <button type="submit" style={styles.filterBtn}>
+            Apply
+          </button>
+        </form>
+      </div>
 
-      {error && <div style={errorStyle}>{error}</div>}
+      {error && <div style={styles.errorBox}>{error}</div>}
 
       {loading ? (
-        <p>Loading stores...</p>
+        <p style={{ color: "#6B7280" }}>Loading...</p>
       ) : stores.length === 0 ? (
-        <p>No stores found.</p>
+        <p style={{ padding: "20px", color: "#6B7280" }}>No stores found.</p>
       ) : (
-        <div
-          style={{
-            overflowX: "auto",
-            borderRadius: "12px",
-            border: "1px solid #e5e7eb",
-            backgroundColor: "#ffffff",
-          }}
-        >
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              fontSize: "14px",
-            }}
-          >
+        <div style={styles.tableWrapper}>
+          <table style={styles.table}>
             <thead>
-              <tr style={{ backgroundColor: "#f3f4f6" }}>
-                <th style={thStyle}>ID</th>
-                <th style={thStyle}>Name</th>
-                <th style={thStyle}>Email</th>
-                <th style={thStyle}>Address</th>
-                <th style={thStyle}>Owner</th>
-                <th style={thStyle}>Avg Rating</th>
-                <th style={thStyle}>Created At</th>
+              <tr style={styles.tableHeadRow}>
+                <th style={styles.th}>ID</th>
+                <th style={styles.th}>Name</th>
+                <th style={styles.th}>Email</th>
+                <th style={styles.th}>Address</th>
+                <th style={styles.th}>Owner</th>
+                <th style={styles.th}>Rating</th>
+                <th style={styles.th}>Created</th>
               </tr>
             </thead>
             <tbody>
               {stores.map((store) => (
-                <tr key={store.id}>
-                  <td style={tdStyle}>{store.id}</td>
-                  <td style={tdStyle}>{store.name}</td>
-                  <td style={tdStyle}>{store.email || "—"}</td>
-                  <td style={tdStyle}>{store.address}</td>
-                  <td style={tdStyle}>
-                    {store.owner
-                      ? `${store.owner.name} (${store.owner.email})`
-                      : "—"}
+                <tr key={store.id} style={styles.tableRow}>
+                  <td style={styles.td}>{store.id}</td>
+                  <td style={{ ...styles.td, fontWeight: "500" }}>{store.name}</td>
+                  <td style={styles.td}>{store.email || "—"}</td>
+                  <td style={styles.td}>
+                    <div style={styles.truncate}>{store.address}</div>
                   </td>
-                  <td style={tdStyle}>
-                    {store.avgRating == null ? "—" : store.avgRating.toFixed(1)}
+                  <td style={styles.td}>
+                    {store.owner ? (
+                      <div>
+                        <div style={{ fontWeight: "500" }}>{store.owner.name}</div>
+                        <div style={{ fontSize: "12px", color: "#6B7280" }}>{store.owner.email}</div>
+                      </div>
+                    ) : (
+                      <span style={{ color: "#9CA3AF" }}>No Owner</span>
+                    )}
                   </td>
-                  <td style={tdStyle}>
-                    {store.createdAt
-                      ? new Date(store.createdAt).toLocaleString()
-                      : "—"}
+                  <td style={styles.td}>
+                    {store.avgRating != null ? (
+                      <span style={styles.ratingBadge}>★ {store.avgRating.toFixed(1)}</span>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                  <td style={styles.td}>
+                    {store.createdAt ? new Date(store.createdAt).toLocaleDateString() : "—"}
                   </td>
                 </tr>
               ))}
@@ -325,35 +254,24 @@ export default function AdminStoresPage() {
         </div>
       )}
 
+      {/* Pagination */}
       {pagination.totalPages > 1 && (
-        <div
-          style={{
-            marginTop: "12px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            fontSize: "13px",
-          }}
-        >
-          <span>
-            Page {pagination.page} of {pagination.totalPages} (total{" "}
-            {pagination.total})
+        <div style={styles.pagination}>
+          <span style={styles.pageInfo}>
+            Page {pagination.page} of {pagination.totalPages}
           </span>
           <div style={{ display: "flex", gap: "8px" }}>
             <button
               onClick={() => handlePageChange(pagination.page - 1)}
               disabled={pagination.page <= 1}
-              style={buttonStyle("#6b7280", pagination.page <= 1)}
+              style={pagination.page <= 1 ? styles.pageBtnDisabled : styles.pageBtn}
             >
               Prev
             </button>
             <button
               onClick={() => handlePageChange(pagination.page + 1)}
               disabled={pagination.page >= pagination.totalPages}
-              style={buttonStyle(
-                "#6b7280",
-                pagination.page >= pagination.totalPages
-              )}
+              style={pagination.page >= pagination.totalPages ? styles.pageBtnDisabled : styles.pageBtn}
             >
               Next
             </button>
@@ -364,59 +282,34 @@ export default function AdminStoresPage() {
   );
 }
 
-const labelStyle = {
-  fontSize: "13px",
-  fontWeight: 500,
-  marginBottom: "4px",
-};
-
-const inputStyle = {
-  width: "100%",
-  padding: "8px 10px",
-  borderRadius: "8px",
-  border: "1px solid #d4d4d4",
-  fontSize: "14px",
-};
-
-const selectStyle = {
-  padding: "6px 8px",
-  borderRadius: "8px",
-  border: "1px solid #d4d4d4",
-  fontSize: "14px",
-};
-
-const buttonStyle = (bg, disabled) => ({
-  padding: "8px 12px",
-  borderRadius: "8px",
-  border: "none",
-  cursor: disabled ? "default" : "pointer",
-  backgroundColor: disabled ? "#9ca3af" : bg,
-  color: "white",
-  fontWeight: 500,
-});
-
-const thStyle = {
-  textAlign: "left",
-  padding: "8px",
-  borderBottom: "1px solid #e5e7eb",
-};
-
-const tdStyle = {
-  padding: "8px",
-  borderBottom: "1px solid #f3f4f6",
-  verticalAlign: "top",
-};
-
-const errorStyle = {
-  marginBottom: "12px",
-  padding: "8px 10px",
-  borderRadius: "8px",
-  backgroundColor: "#fee2e2",
-  color: "#b91c1c",
-  fontSize: "13px",
-};
-const helperTextStyle = {
-  marginTop: "4px",
-  fontSize: "12px",
-  color: "#6b7280",
+const styles = {
+  container: { padding: "24px", backgroundColor: "#F9FAFB", minHeight: "100%" },
+  pageHeader: { fontSize: "24px", fontWeight: "700", color: "#111827", marginBottom: "20px" },
+  detailsCard: { backgroundColor: "white", borderRadius: "8px", border: "1px solid #E5E7EB", marginBottom: "24px", overflow: "hidden", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" },
+  summary: { padding: "16px", cursor: "pointer", fontWeight: "600", color: "#4F46E5", backgroundColor: "#F9FAFB", outline: "none" },
+  formContent: { padding: "20px", borderTop: "1px solid #E5E7EB" },
+  createForm: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px" },
+  formGroup: { display: "flex", flexDirection: "column", gap: "6px" },
+  label: { fontSize: "13px", fontWeight: "600", color: "#374151" },
+  input: { padding: "8px 12px", border: "1px solid #D1D5DB", borderRadius: "6px" },
+  textarea: { padding: "8px 12px", border: "1px solid #D1D5DB", borderRadius: "6px", minHeight: "60px" },
+  createBtn: { padding: "10px 20px", backgroundColor: "#10B981", color: "white", border: "none", borderRadius: "6px", fontWeight: "600", cursor: "pointer" },
+  errorBox: { padding: "12px", backgroundColor: "#FEE2E2", color: "#991B1B", borderRadius: "6px", marginBottom: "16px" },
+  toolbar: { marginBottom: "16px" },
+  toolbarForm: { display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" },
+  searchInput: { flex: 1, minWidth: "200px", padding: "8px 12px", border: "1px solid #D1D5DB", borderRadius: "6px", outline: "none" },
+  toolbarSelect: { padding: "8px", border: "1px solid #D1D5DB", borderRadius: "6px", cursor: "pointer" },
+  filterBtn: { padding: "8px 16px", backgroundColor: "#4F46E5", color: "white", border: "none", borderRadius: "6px", fontWeight: "600", cursor: "pointer" },
+  tableWrapper: { backgroundColor: "white", borderRadius: "8px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)", overflowX: "auto", border: "1px solid #E5E7EB" },
+  table: { width: "100%", borderCollapse: "collapse", fontSize: "14px" },
+  tableHeadRow: { backgroundColor: "#F9FAFB", borderBottom: "1px solid #E5E7EB" },
+  th: { textAlign: "left", padding: "12px 16px", fontSize: "12px", fontWeight: "600", color: "#6B7280", textTransform: "uppercase" },
+  tableRow: { borderBottom: "1px solid #F3F4F6" },
+  td: { padding: "12px 16px", color: "#1F2937", verticalAlign: "middle" },
+  truncate: { maxWidth: "200px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
+  ratingBadge: { backgroundColor: "#FEF3C7", color: "#D97706", padding: "2px 8px", borderRadius: "99px", fontWeight: "600", fontSize: "12px" },
+  pagination: { marginTop: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" },
+  pageInfo: { fontSize: "14px", color: "#6B7280" },
+  pageBtn: { padding: "6px 12px", border: "1px solid #D1D5DB", borderRadius: "6px", backgroundColor: "white", cursor: "pointer", color: "#374151" },
+  pageBtnDisabled: { padding: "6px 12px", border: "1px solid #E5E7EB", borderRadius: "6px", backgroundColor: "#F3F4F6", cursor: "default", color: "#9CA3AF" },
 };

@@ -5,7 +5,6 @@ import { adminGetUsers, adminCreateUser } from "../api/client";
 
 export default function AdminUsersPage() {
   const { token } = useAuth();
-
   const [users, setUsers] = useState([]);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -19,7 +18,6 @@ export default function AdminUsersPage() {
   const [sortOrder, setSortOrder] = useState("desc");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState(null);
   const [newUser, setNewUser] = useState({
@@ -62,15 +60,12 @@ export default function AdminUsersPage() {
     e.preventDefault();
     loadUsers(1);
   };
-
   const handlePageChange = (newPage) => {
     if (newPage < 1 || newPage > pagination.totalPages) return;
     loadUsers(newPage);
   };
-
-  const handleNewUserChange = (e) => {
+  const handleNewUserChange = (e) =>
     setNewUser((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
@@ -86,7 +81,6 @@ export default function AdminUsersPage() {
         address: "",
         role: "USER",
       });
-      // refresh list
       loadUsers(1);
     } catch (err) {
       console.error(err);
@@ -97,108 +91,79 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div>
-      <h2 style={{ marginBottom: "8px" }}>Admin – Users</h2>
-      <p style={{ marginBottom: "12px", color: "#555", fontSize: "13px" }}>
-        Create and manage users (ADMIN, OWNER, USER).
-      </p>
+    <div style={styles.container}>
+      <h2 style={styles.pageHeader}>User Management</h2>
 
-      {/* Create user form */}
-      <details
-        open
-        style={{
-          marginBottom: "16px",
-          borderRadius: "10px",
-          border: "1px solid #e5e7eb",
-          backgroundColor: "#ffffff",
-        }}
-      >
-        <summary
-          style={{
-            cursor: "pointer",
-            padding: "8px 12px",
-            fontWeight: 500,
-          }}
-        >
-          Create New User
-        </summary>
-        <div style={{ padding: "12px" }}>
-          <form
-            onSubmit={handleCreateUser}
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-              gap: "8px 12px",
-              alignItems: "flex-start",
-            }}
-          >
-            <div>
-              <label style={labelStyle}>Full Name</label>
+      {/* Creation Card */}
+      <details style={styles.detailsCard}>
+        <summary style={styles.summary}>+ Create New User</summary>
+        <div style={styles.formContent}>
+          <form onSubmit={handleCreateUser} style={styles.createForm}>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Full Name</label>
               <input
                 type="text"
                 name="name"
                 value={newUser.name}
                 onChange={handleNewUserChange}
-                style={inputStyle}
+                style={styles.input}
                 required
               />
             </div>
-            <div>
-              <label style={labelStyle}>Email</label>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Email</label>
               <input
                 type="email"
                 name="email"
                 value={newUser.email}
                 onChange={handleNewUserChange}
-                style={inputStyle}
+                style={styles.input}
                 required
               />
             </div>
-            <div>
-              <label style={labelStyle}>Password</label>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Password</label>
               <input
                 type="password"
                 name="password"
                 value={newUser.password}
                 onChange={handleNewUserChange}
-                style={inputStyle}
+                style={styles.input}
                 required
               />
             </div>
-            <div>
-              <label style={labelStyle}>Role</label>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Role</label>
               <select
                 name="role"
                 value={newUser.role}
                 onChange={handleNewUserChange}
-                style={inputStyle}
+                style={styles.select}
               >
-                <option value="USER">USER</option>
-                <option value="OWNER">OWNER</option>
-                <option value="ADMIN">ADMIN</option>
+                <option value="USER">User</option>
+                <option value="OWNER">Owner</option>
+                <option value="ADMIN">Admin</option>
               </select>
             </div>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={labelStyle}>Address (optional)</label>
+            <div style={{ ...styles.formGroup, gridColumn: "1/-1" }}>
+              <label style={styles.label}>Address (optional)</label>
               <textarea
                 name="address"
                 value={newUser.address}
                 onChange={handleNewUserChange}
-                style={{ ...inputStyle, height: "60px", resize: "vertical" }}
+                style={styles.textarea}
               />
             </div>
-
             {createError && (
-              <div style={{ ...errorStyle, gridColumn: "1 / -1" }}>
+              <div style={{ ...styles.errorBox, gridColumn: "1/-1" }}>
                 {createError}
               </div>
             )}
-
-            <div style={{ gridColumn: "1 / -1", marginTop: "4px" }}>
+            <div style={{ gridColumn: "1/-1" }}>
               <button
                 type="submit"
                 disabled={creating}
-                style={buttonStyle("#16a34a", creating)}
+                style={styles.createBtn}
               >
                 {creating ? "Creating..." : "Create User"}
               </button>
@@ -207,106 +172,83 @@ export default function AdminUsersPage() {
         </div>
       </details>
 
-      {/* Filters & search */}
-      <form
-        onSubmit={handleSearchSubmit}
-        style={{
-          display: "flex",
-          gap: "8px",
-          alignItems: "center",
-          marginBottom: "12px",
-          flexWrap: "wrap",
-        }}
-      >
-        <input
-          type="text"
-          placeholder="Search by name, email, address..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{
-            flex: 1,
-            minWidth: "200px",
-            padding: "8px 10px",
-            borderRadius: "8px",
-            border: "1px solid #d4d4d4",
-            fontSize: "14px",
-          }}
-        />
-        <select
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-          style={selectStyle}
-        >
-          <option value="">All roles</option>
-          <option value="ADMIN">ADMIN</option>
-          <option value="OWNER">OWNER</option>
-          <option value="USER">USER</option>
-        </select>
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-          style={selectStyle}
-        >
-          <option value="createdAt">Sort by Created At</option>
-          <option value="name">Sort by Name</option>
-          <option value="email">Sort by Email</option>
-          <option value="role">Sort by Role</option>
-        </select>
-        <select
-          value={sortOrder}
-          onChange={(e) => setSortOrder(e.target.value)}
-          style={selectStyle}
-        >
-          <option value="desc">Desc</option>
-          <option value="asc">Asc</option>
-        </select>
-        <button type="submit" style={buttonStyle("#2563eb")}>
-          Apply
-        </button>
-      </form>
+      {/* Toolbar */}
+      <div style={styles.toolbar}>
+        <form onSubmit={handleSearchSubmit} style={styles.toolbarForm}>
+          <input
+            type="text"
+            placeholder="Search users..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={styles.searchInput}
+          />
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            style={styles.toolbarSelect}
+          >
+            <option value="">All Roles</option>
+            <option value="ADMIN">Admin</option>
+            <option value="OWNER">Owner</option>
+            <option value="USER">User</option>
+          </select>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            style={styles.toolbarSelect}
+          >
+            <option value="createdAt">Sort: Date</option>
+            <option value="name">Sort: Name</option>
+            <option value="email">Sort: Email</option>
+            <option value="role">Sort: Role</option>
+          </select>
+          <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+            style={styles.toolbarSelect}
+          >
+            <option value="desc">Desc</option>
+            <option value="asc">Asc</option>
+          </select>
+          <button type="submit" style={styles.filterBtn}>
+            Apply
+          </button>
+        </form>
+      </div>
 
-      {error && <div style={errorStyle}>{error}</div>}
+      {error && <div style={styles.errorBox}>{error}</div>}
 
       {loading ? (
-        <p>Loading users...</p>
+        <p style={{ color: "#6B7280" }}>Loading...</p>
       ) : users.length === 0 ? (
-        <p>No users found.</p>
+        <p style={{ padding: "20px", color: "#6B7280" }}>No users found.</p>
       ) : (
-        <div
-          style={{
-            overflowX: "auto",
-            borderRadius: "12px",
-            border: "1px solid #e5e7eb",
-            backgroundColor: "#ffffff",
-          }}
-        >
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              fontSize: "14px",
-            }}
-          >
+        <div style={styles.tableWrapper}>
+          <table style={styles.table}>
             <thead>
-              <tr style={{ backgroundColor: "#f3f4f6" }}>
-                <th style={thStyle}>ID</th>
-                <th style={thStyle}>Name</th>
-                <th style={thStyle}>Email</th>
-                <th style={thStyle}>Role</th>
-                <th style={thStyle}>Address</th>
-                <th style={thStyle}>Created At</th>
+              <tr style={styles.tableHeadRow}>
+                <th style={styles.th}>ID</th>
+                <th style={styles.th}>Name</th>
+                <th style={styles.th}>Email</th>
+                <th style={styles.th}>Role</th>
+                <th style={styles.th}>Address</th>
+                <th style={styles.th}>Created</th>
               </tr>
             </thead>
             <tbody>
               {users.map((u) => (
-                <tr key={u.id}>
-                  <td style={tdStyle}>{u.id}</td>
-                  <td style={tdStyle}>{u.name}</td>
-                  <td style={tdStyle}>{u.email}</td>
-                  <td style={tdStyle}>{u.role}</td>
-                  <td style={tdStyle}>{u.address || "—"}</td>
-                  <td style={tdStyle}>
-                    {u.createdAt ? new Date(u.createdAt).toLocaleString() : "—"}
+                <tr key={u.id} style={styles.tableRow}>
+                  <td style={styles.td}>{u.id}</td>
+                  <td style={{ ...styles.td, fontWeight: "500" }}>{u.name}</td>
+                  <td style={styles.td}>{u.email}</td>
+                  <td style={styles.td}>
+                    <span style={getRoleBadgeStyle(u.role)}>{u.role}</span>
+                  </td>
+                  <td style={styles.td}>
+                    <div style={styles.truncate}>{u.address || "—"}</div>
+                  </td>
+                  <td style={styles.td}>
+                    {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"}
                   </td>
                 </tr>
               ))}
@@ -315,35 +257,24 @@ export default function AdminUsersPage() {
         </div>
       )}
 
+      {/* Pagination */}
       {pagination.totalPages > 1 && (
-        <div
-          style={{
-            marginTop: "12px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            fontSize: "13px",
-          }}
-        >
-          <span>
-            Page {pagination.page} of {pagination.totalPages} (total{" "}
-            {pagination.total})
+        <div style={styles.pagination}>
+          <span style={styles.pageInfo}>
+            Page {pagination.page} of {pagination.totalPages}
           </span>
           <div style={{ display: "flex", gap: "8px" }}>
             <button
               onClick={() => handlePageChange(pagination.page - 1)}
               disabled={pagination.page <= 1}
-              style={buttonStyle("#6b7280", pagination.page <= 1)}
+              style={pagination.page <= 1 ? styles.pageBtnDisabled : styles.pageBtn}
             >
               Prev
             </button>
             <button
               onClick={() => handlePageChange(pagination.page + 1)}
               disabled={pagination.page >= pagination.totalPages}
-              style={buttonStyle(
-                "#6b7280",
-                pagination.page >= pagination.totalPages
-              )}
+              style={pagination.page >= pagination.totalPages ? styles.pageBtnDisabled : styles.pageBtn}
             >
               Next
             </button>
@@ -354,54 +285,86 @@ export default function AdminUsersPage() {
   );
 }
 
-const labelStyle = {
-  fontSize: "13px",
-  fontWeight: 500,
-  marginBottom: "4px",
-};
-
-const inputStyle = {
-  width: "100%",
-  padding: "8px 10px",
-  borderRadius: "8px",
-  border: "1px solid #d4d4d4",
-  fontSize: "14px",
-};
-
-const selectStyle = {
-  padding: "6px 8px",
-  borderRadius: "8px",
-  border: "1px solid #d4d4d4",
-  fontSize: "14px",
-};
-
-const buttonStyle = (bg, disabled) => ({
-  padding: "8px 12px",
-  borderRadius: "8px",
-  border: "none",
-  cursor: disabled ? "default" : "pointer",
-  backgroundColor: disabled ? "#9ca3af" : bg,
-  color: "white",
-  fontWeight: 500,
+const getRoleBadgeStyle = (role) => ({
+  padding: "2px 8px",
+  borderRadius: "99px",
+  fontSize: "11px",
+  fontWeight: "600",
+  backgroundColor:
+    role === "ADMIN"
+      ? "#FEE2E2"
+      : role === "OWNER"
+      ? "#E0E7FF"
+      : "#F3F4F6",
+  color:
+    role === "ADMIN"
+      ? "#B91C1C"
+      : role === "OWNER"
+      ? "#4338CA"
+      : "#374151",
 });
 
-const thStyle = {
-  textAlign: "left",
-  padding: "8px",
-  borderBottom: "1px solid #e5e7eb",
-};
-
-const tdStyle = {
-  padding: "8px",
-  borderBottom: "1px solid #f3f4f6",
-  verticalAlign: "top",
-};
-
-const errorStyle = {
-  marginBottom: "12px",
-  padding: "8px 10px",
-  borderRadius: "8px",
-  backgroundColor: "#fee2e2",
-  color: "#b91c1c",
-  fontSize: "13px",
+const styles = {
+  container: { padding: "24px", backgroundColor: "#F9FAFB", minHeight: "100%" },
+  pageHeader: { fontSize: "24px", fontWeight: "700", color: "#111827", marginBottom: "20px" },
+  
+  detailsCard: {
+    backgroundColor: "white", borderRadius: "8px", border: "1px solid #E5E7EB",
+    marginBottom: "24px", overflow: "hidden", boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+  },
+  summary: {
+    padding: "16px", cursor: "pointer", fontWeight: "600", color: "#4F46E5",
+    backgroundColor: "#F9FAFB", outline: "none"
+  },
+  formContent: { padding: "20px", borderTop: "1px solid #E5E7EB" },
+  createForm: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px" },
+  formGroup: { display: "flex", flexDirection: "column", gap: "6px" },
+  label: { fontSize: "13px", fontWeight: "600", color: "#374151" },
+  input: { padding: "8px 12px", border: "1px solid #D1D5DB", borderRadius: "6px" },
+  select: { padding: "8px 12px", border: "1px solid #D1D5DB", borderRadius: "6px" },
+  textarea: { padding: "8px 12px", border: "1px solid #D1D5DB", borderRadius: "6px", minHeight: "60px" },
+  createBtn: {
+    padding: "10px 20px", backgroundColor: "#10B981", color: "white",
+    border: "none", borderRadius: "6px", fontWeight: "600", cursor: "pointer"
+  },
+  errorBox: { padding: "12px", backgroundColor: "#FEE2E2", color: "#991B1B", borderRadius: "6px", marginBottom: "16px" },
+  
+  toolbar: { marginBottom: "16px" },
+  toolbarForm: { display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" },
+  searchInput: {
+    flex: 1, minWidth: "200px", padding: "8px 12px", border: "1px solid #D1D5DB",
+    borderRadius: "6px", outline: "none"
+  },
+  toolbarSelect: { padding: "8px", border: "1px solid #D1D5DB", borderRadius: "6px", cursor: "pointer" },
+  filterBtn: {
+    padding: "8px 16px", backgroundColor: "#4F46E5", color: "white",
+    border: "none", borderRadius: "6px", fontWeight: "600", cursor: "pointer"
+  },
+  
+  tableWrapper: {
+    backgroundColor: "white", borderRadius: "8px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+    overflowX: "auto", border: "1px solid #E5E7EB"
+  },
+  table: { width: "100%", borderCollapse: "collapse", fontSize: "14px" },
+  tableHeadRow: { backgroundColor: "#F9FAFB", borderBottom: "1px solid #E5E7EB" },
+  th: {
+    textAlign: "left", padding: "12px 16px", fontSize: "12px",
+    fontWeight: "600", color: "#6B7280", textTransform: "uppercase"
+  },
+  tableRow: { borderBottom: "1px solid #F3F4F6" },
+  td: { padding: "12px 16px", color: "#1F2937" },
+  truncate: { maxWidth: "200px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
+  
+  pagination: {
+    marginTop: "20px", display: "flex", justifyContent: "space-between", alignItems: "center"
+  },
+  pageInfo: { fontSize: "14px", color: "#6B7280" },
+  pageBtn: {
+    padding: "6px 12px", border: "1px solid #D1D5DB", borderRadius: "6px",
+    backgroundColor: "white", cursor: "pointer", color: "#374151"
+  },
+  pageBtnDisabled: {
+    padding: "6px 12px", border: "1px solid #E5E7EB", borderRadius: "6px",
+    backgroundColor: "#F3F4F6", cursor: "default", color: "#9CA3AF"
+  },
 };

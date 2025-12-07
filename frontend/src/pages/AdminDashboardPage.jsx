@@ -28,57 +28,132 @@ export default function AdminDashboardPage() {
   }, [token]);
 
   return (
-    <div>
-      <h2 style={{ marginBottom: "8px" }}>Admin Dashboard</h2>
-      <p style={{ marginBottom: "16px", color: "#555", fontSize: "13px" }}>
-        Overview of users, stores, and ratings.
-      </p>
+    <div style={styles.container}>
+      <header style={styles.header}>
+        <h2 style={styles.pageTitle}>Admin Dashboard</h2>
+        <p style={styles.pageSubtitle}>Overview of platform statistics.</p>
+      </header>
 
-      {loading && <p>Loading dashboard...</p>}
-
-      {error && <div style={errorStyle}>{error}</div>}
+      {loading && <p style={styles.infoText}>Loading data...</p>}
+      {error && <div style={styles.errorBanner}>{error}</div>}
 
       {data && (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            gap: "12px",
-          }}
-        >
-          <StatCard label="Total Users" value={data.totalUsers} />
-          <StatCard label="Total Stores" value={data.totalStores} />
-          <StatCard label="Total Ratings" value={data.totalRatings} />
-          <StatCard label="Admins" value={data.usersByRole?.ADMIN ?? 0} />
-          <StatCard label="Owners" value={data.usersByRole?.OWNER ?? 0} />
-          <StatCard label="Normal Users" value={data.usersByRole?.USER ?? 0} />
+        <div style={styles.grid}>
+          <StatCard
+            label="Total Users"
+            value={data.totalUsers}
+            color="#4F46E5"
+          />
+          <StatCard
+            label="Total Stores"
+            value={data.totalStores}
+            color="#10B981"
+          />
+          <StatCard
+            label="Total Ratings"
+            value={data.totalRatings}
+            color="#F59E0B"
+          />
+          
+          <div style={styles.separator} />
+          
+          <StatCard
+            label="Admins"
+            value={data.usersByRole?.ADMIN ?? 0}
+            color="#EF4444"
+            small
+          />
+          <StatCard
+            label="Owners"
+            value={data.usersByRole?.OWNER ?? 0}
+            color="#8B5CF6"
+            small
+          />
+          <StatCard
+            label="Regular Users"
+            value={data.usersByRole?.USER ?? 0}
+            color="#6B7280"
+            small
+          />
         </div>
       )}
     </div>
   );
 }
 
-function StatCard({ label, value }) {
+function StatCard({ label, value, color, small }) {
   return (
     <div
       style={{
-        borderRadius: "10px",
-        padding: "12px",
-        backgroundColor: "#f9fafb",
-        border: "1px solid #e5e7eb",
+        ...styles.card,
+        borderTop: `4px solid ${color}`,
+        gridColumn: small ? "span 1" : undefined,
       }}
     >
-      <div style={{ fontSize: "13px", color: "#6b7280" }}>{label}</div>
-      <div style={{ fontSize: "20px", fontWeight: 600 }}>{value}</div>
+      <div style={styles.cardLabel}>{label}</div>
+      <div style={{ ...styles.cardValue, color: color }}>{value}</div>
     </div>
   );
 }
 
-const errorStyle = {
-  marginBottom: "12px",
-  padding: "8px 10px",
-  borderRadius: "8px",
-  backgroundColor: "#fee2e2",
-  color: "#b91c1c",
-  fontSize: "13px",
+const styles = {
+  container: {
+    padding: "32px",
+    backgroundColor: "#F9FAFB",
+    minHeight: "100%",
+  },
+  header: {
+    marginBottom: "32px",
+  },
+  pageTitle: {
+    fontSize: "28px",
+    fontWeight: "700",
+    color: "#111827",
+    margin: "0 0 8px 0",
+  },
+  pageSubtitle: {
+    fontSize: "14px",
+    color: "#6B7280",
+    margin: 0,
+  },
+  infoText: { color: "#6B7280" },
+  errorBanner: {
+    marginBottom: "20px",
+    padding: "12px",
+    backgroundColor: "#FEE2E2",
+    color: "#991B1B",
+    borderRadius: "8px",
+  },
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+    gap: "24px",
+  },
+  separator: {
+    gridColumn: "1 / -1",
+    height: "1px",
+    backgroundColor: "#E5E7EB",
+    margin: "16px 0",
+  },
+  card: {
+    backgroundColor: "white",
+    borderRadius: "12px",
+    padding: "24px",
+    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
+  },
+  cardLabel: {
+    fontSize: "14px",
+    fontWeight: "600",
+    color: "#6B7280",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px",
+    marginBottom: "12px",
+  },
+  cardValue: {
+    fontSize: "36px",
+    fontWeight: "800",
+  },
 };

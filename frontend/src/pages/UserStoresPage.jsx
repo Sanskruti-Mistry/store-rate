@@ -5,7 +5,6 @@ import { getStores, rateStore } from "../api/client";
 
 export default function UserStoresPage() {
   const { token } = useAuth();
-
   const [stores, setStores] = useState([]);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -45,36 +44,28 @@ export default function UserStoresPage() {
   useEffect(() => {
     loadStores(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sortBy, sortOrder]); // search & page we handle via buttons
+  }, [sortBy, sortOrder]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     loadStores(1);
   };
-
   const handlePageChange = (newPage) => {
     if (newPage < 1 || newPage > pagination.totalPages) return;
     loadStores(newPage);
   };
-
   const handleRatingChange = async (storeId, newValue) => {
     if (!token) return;
     const value = parseInt(newValue, 10);
     if (isNaN(value) || value < 1 || value > 5) return;
-
     setRatingLoadingId(storeId);
     setError(null);
     try {
       const res = await rateStore(token, storeId, value);
-      // Update store in local state
       setStores((prev) =>
         prev.map((s) =>
           s.id === storeId
-            ? {
-                ...s,
-                avgRating: res.avgRating,
-                myRating: res.rating.value,
-              }
+            ? { ...s, avgRating: res.avgRating, myRating: res.rating.value }
             : s
         )
       );
@@ -87,106 +78,84 @@ export default function UserStoresPage() {
   };
 
   return (
-    <div>
-      <h2 style={{ marginBottom: "8px" }}>Stores (User View)</h2>
-      <p style={{ marginBottom: "12px", color: "#555", fontSize: "13px" }}>
-        You can rate each store from 1 to 5. Overall rating is the average of
-        all users.
-      </p>
+    <div style={styles.container}>
+      <header style={styles.header}>
+        <h2 style={styles.title}>Browse Stores</h2>
+        <p style={styles.subtitle}>Find and rate your favorite local spots.</p>
+      </header>
 
-      <form
-        onSubmit={handleSearchSubmit}
-        style={{
-          display: "flex",
-          gap: "8px",
-          alignItems: "center",
-          marginBottom: "12px",
-          flexWrap: "wrap",
-        }}
-      >
-        <input
-          type="text"
-          placeholder="Search by name, email, address..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{
-            flex: 1,
-            minWidth: "200px",
-            padding: "8px 10px",
-            borderRadius: "8px",
-            border: "1px solid #d4d4d4",
-            fontSize: "14px",
-          }}
-        />
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-          style={selectStyle}
-        >
-          <option value="name">Sort by Name</option>
-          <option value="email">Sort by Email</option>
-          <option value="createdAt">Sort by Created At</option>
-        </select>
-        <select
-          value={sortOrder}
-          onChange={(e) => setSortOrder(e.target.value)}
-          style={selectStyle}
-        >
-          <option value="asc">Asc</option>
-          <option value="desc">Desc</option>
-        </select>
-        <button type="submit" style={buttonStyle("#2563eb")}>
-          Search
-        </button>
-      </form>
+      <div style={styles.toolbar}>
+        <form onSubmit={handleSearchSubmit} style={styles.toolbarForm}>
+          <input
+            type="text"
+            placeholder="Search stores..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={styles.searchInput}
+          />
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            style={styles.select}
+          >
+            <option value="name">Sort: Name</option>
+            <option value="email">Sort: Email</option>
+            <option value="createdAt">Sort: Date</option>
+          </select>
+          <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+            style={styles.select}
+          >
+            <option value="asc">Asc</option>
+            <option value="desc">Desc</option>
+          </select>
+          <button type="submit" style={styles.primaryBtn}>
+            Search
+          </button>
+        </form>
+      </div>
 
-      {error && <div style={errorStyle}>{error}</div>}
+      {error && <div style={styles.errorBox}>{error}</div>}
 
       {loading ? (
-        <p>Loading stores...</p>
+        <p style={{ color: "#6B7280" }}>Loading stores...</p>
       ) : stores.length === 0 ? (
-        <p>No stores found.</p>
+        <p style={{ color: "#6B7280" }}>No stores found.</p>
       ) : (
-        <div
-          style={{
-            overflowX: "auto",
-            borderRadius: "12px",
-            border: "1px solid #e5e7eb",
-            backgroundColor: "#ffffff",
-          }}
-        >
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              fontSize: "14px",
-            }}
-          >
+        <div style={styles.tableCard}>
+          <table style={styles.table}>
             <thead>
-              <tr style={{ backgroundColor: "#f3f4f6" }}>
-                <th style={thStyle}>ID</th>
-                <th style={thStyle}>Name</th>
-                <th style={thStyle}>Email</th>
-                <th style={thStyle}>Address</th>
-                <th style={thStyle}>Avg Rating</th>
-                <th style={thStyle}>My Rating</th>
-                <th style={thStyle}>Set Rating</th>
+              <tr style={styles.trHead}>
+                <th style={styles.th}>Name</th>
+                <th style={styles.th}>Contact</th>
+                <th style={styles.th}>Address</th>
+                <th style={styles.th}>Rating</th>
+                <th style={styles.th}>Your Rating</th>
               </tr>
             </thead>
             <tbody>
               {stores.map((store) => (
-                <tr key={store.id}>
-                  <td style={tdStyle}>{store.id}</td>
-                  <td style={tdStyle}>{store.name}</td>
-                  <td style={tdStyle}>{store.email || "-"}</td>
-                  <td style={tdStyle}>{store.address}</td>
-                  <td style={tdStyle}>
-                    {store.avgRating == null ? "—" : store.avgRating.toFixed(1)}
+                <tr key={store.id} style={styles.trBody}>
+                  <td style={styles.td}>
+                    <div style={{ fontWeight: "600", color: "#111827" }}>
+                      {store.name}
+                    </div>
                   </td>
-                  <td style={tdStyle}>
-                    {store.myRating == null ? "—" : store.myRating}
+                  <td style={styles.td}>{store.email || "—"}</td>
+                  <td style={styles.td}>
+                    <div style={styles.address}>{store.address}</div>
                   </td>
-                  <td style={tdStyle}>
+                  <td style={styles.td}>
+                    {store.avgRating != null ? (
+                      <span style={styles.avgBadge}>
+                        ★ {store.avgRating.toFixed(1)}
+                      </span>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                  <td style={styles.td}>
                     <select
                       value={store.myRating || ""}
                       onChange={(e) =>
@@ -194,18 +163,16 @@ export default function UserStoresPage() {
                       }
                       disabled={ratingLoadingId === store.id}
                       style={{
-                        ...selectStyle,
-                        minWidth: "80px",
+                        ...styles.ratingSelect,
+                        borderColor: store.myRating ? "#F59E0B" : "#D1D5DB",
                       }}
                     >
-                      <option value="">
-                        {store.myRating == null ? "Rate…" : "Change…"}
-                      </option>
-                      <option value="1">1</option>
-                      <option value="2">2</option>
-                      <option value="3">3</option>
-                      <option value="4">4</option>
-                      <option value="5">5</option>
+                      <option value="">Rate...</option>
+                      <option value="1">1 Star</option>
+                      <option value="2">2 Stars</option>
+                      <option value="3">3 Stars</option>
+                      <option value="4">4 Stars</option>
+                      <option value="5">5 Stars</option>
                     </select>
                   </td>
                 </tr>
@@ -216,34 +183,26 @@ export default function UserStoresPage() {
       )}
 
       {pagination.totalPages > 1 && (
-        <div
-          style={{
-            marginTop: "12px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            fontSize: "13px",
-          }}
-        >
-          <span>
-            Page {pagination.page} of {pagination.totalPages} (total{" "}
-            {pagination.total})
+        <div style={styles.pagination}>
+          <span style={styles.pageText}>
+            Page {pagination.page} of {pagination.totalPages}
           </span>
           <div style={{ display: "flex", gap: "8px" }}>
             <button
               onClick={() => handlePageChange(pagination.page - 1)}
               disabled={pagination.page <= 1}
-              style={buttonStyle("#6b7280", pagination.page <= 1)}
+              style={pagination.page <= 1 ? styles.btnDisabled : styles.btn}
             >
-              Prev
+              Previous
             </button>
             <button
               onClick={() => handlePageChange(pagination.page + 1)}
               disabled={pagination.page >= pagination.totalPages}
-              style={buttonStyle(
-                "#6b7280",
+              style={
                 pagination.page >= pagination.totalPages
-              )}
+                  ? styles.btnDisabled
+                  : styles.btn
+              }
             >
               Next
             </button>
@@ -254,40 +213,28 @@ export default function UserStoresPage() {
   );
 }
 
-const selectStyle = {
-  padding: "6px 8px",
-  borderRadius: "8px",
-  border: "1px solid #d4d4d4",
-  fontSize: "14px",
-};
-
-const buttonStyle = (bg, disabled) => ({
-  padding: "8px 12px",
-  borderRadius: "8px",
-  border: "none",
-  cursor: disabled ? "default" : "pointer",
-  backgroundColor: disabled ? "#9ca3af" : bg,
-  color: "white",
-  fontWeight: 500,
-});
-
-const thStyle = {
-  textAlign: "left",
-  padding: "8px",
-  borderBottom: "1px solid #e5e7eb",
-};
-
-const tdStyle = {
-  padding: "8px",
-  borderBottom: "1px solid #f3f4f6",
-  verticalAlign: "top",
-};
-
-const errorStyle = {
-  marginBottom: "12px",
-  padding: "8px 10px",
-  borderRadius: "8px",
-  backgroundColor: "#fee2e2",
-  color: "#b91c1c",
-  fontSize: "13px",
+const styles = {
+  container: { padding: "24px", backgroundColor: "#F9FAFB", minHeight: "100%" },
+  header: { marginBottom: "24px" },
+  title: { fontSize: "24px", fontWeight: "700", color: "#111827", margin: "0 0 4px 0" },
+  subtitle: { fontSize: "14px", color: "#6B7280", margin: 0 },
+  toolbar: { marginBottom: "20px" },
+  toolbarForm: { display: "flex", gap: "10px", flexWrap: "wrap" },
+  searchInput: { flex: 1, minWidth: "220px", padding: "10px", border: "1px solid #D1D5DB", borderRadius: "8px" },
+  select: { padding: "10px", border: "1px solid #D1D5DB", borderRadius: "8px", backgroundColor: "white" },
+  primaryBtn: { padding: "10px 20px", backgroundColor: "#4F46E5", color: "white", border: "none", borderRadius: "8px", fontWeight: "600", cursor: "pointer" },
+  errorBox: { padding: "12px", backgroundColor: "#FEE2E2", color: "#991B1B", borderRadius: "8px", marginBottom: "16px" },
+  tableCard: { backgroundColor: "white", borderRadius: "12px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)", overflowX: "auto", border: "1px solid #E5E7EB" },
+  table: { width: "100%", borderCollapse: "collapse", fontSize: "14px" },
+  trHead: { backgroundColor: "#F9FAFB", borderBottom: "1px solid #E5E7EB" },
+  th: { padding: "16px", textAlign: "left", fontSize: "12px", fontWeight: "600", color: "#6B7280", textTransform: "uppercase" },
+  trBody: { borderBottom: "1px solid #F3F4F6" },
+  td: { padding: "16px", color: "#374151", verticalAlign: "middle" },
+  address: { fontSize: "13px", color: "#6B7280", maxWidth: "250px" },
+  avgBadge: { backgroundColor: "#FFFBEB", color: "#B45309", padding: "4px 8px", borderRadius: "6px", fontWeight: "600", fontSize: "13px" },
+  ratingSelect: { padding: "6px 10px", borderRadius: "6px", border: "1px solid #D1D5DB", cursor: "pointer", fontSize: "13px" },
+  pagination: { marginTop: "24px", display: "flex", justifyContent: "space-between", alignItems: "center" },
+  pageText: { fontSize: "14px", color: "#6B7280" },
+  btn: { padding: "8px 16px", backgroundColor: "white", border: "1px solid #D1D5DB", borderRadius: "8px", cursor: "pointer", fontWeight: "500", color: "#374151" },
+  btnDisabled: { padding: "8px 16px", backgroundColor: "#F3F4F6", border: "1px solid #E5E7EB", borderRadius: "8px", cursor: "not-allowed", color: "#9CA3AF" },
 };

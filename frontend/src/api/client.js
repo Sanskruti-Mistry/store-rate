@@ -1,215 +1,94 @@
 // src/api/client.js
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const API_BASE = "http://localhost:3000"; // Ensure this matches your backend port
 
-async function apiRequest(path, options = {}) {
-  const url = `${API_BASE_URL}${path}`;
-
-  const defaultHeaders = {
+// Generic helper for requests
+async function apiRequest(endpoint, method = "GET", data = null, token = null) {
+  const headers = {
     "Content-Type": "application/json",
   };
 
-  const fetchOptions = {
-    method: options.method || "GET",
-    headers: {
-      ...defaultHeaders,
-      ...(options.headers || {}),
-    },
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const config = {
+    method,
+    headers,
   };
 
-  if (options.body) {
-    fetchOptions.body = JSON.stringify(options.body);
+  if (data) {
+    config.body = JSON.stringify(data);
   }
 
-  const response = await fetch(url, fetchOptions);
+  const res = await fetch(`${API_BASE}${endpoint}`, config);
+  const json = await res.json();
 
-  let data;
-  try {
-    data = await response.json();
-  } catch (e) {
-    data = null;
+  if (!res.ok) {
+    throw new Error(json.error || json.message || "API Request failed");
   }
 
-  if (!response.ok) {
-    const error = new Error(
-      data && data.error
-        ? data.error
-        : `Request failed with status ${response.status}`
-    );
-    error.status = response.status;
-    error.data = data;
-    throw error;
-  }
-
-  return data;
+  return json;
 }
 
-// Health checks
-export function checkBackendHealth() {
-  return apiRequest("/health");
+// --- AUTH API ---
+
+export function signupUser(formData) {
+  // We pass 'formData' directly so it includes name, email, password, AND role
+  return apiRequest("/auth/signup", "POST", formData);
 }
 
-export function checkDbHealth() {
-  return apiRequest("/db-health");
-}
-
-// ---- Auth APIs ----
-
-export function signupUser(payload) {
-  return apiRequest("/auth/signup", {
-    method: "POST",
-    body: payload,
-  });
-}
-
-export function loginUser(payload) {
-  return apiRequest("/auth/login", {
-    method: "POST",
-    body: payload,
-  });
+export function loginUser(formData) {
+  return apiRequest("/auth/login", "POST", formData);
 }
 
 export function fetchCurrentUser(token) {
-  return apiRequest("/auth/me", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  return apiRequest("/auth/me", "GET", null, token);
 }
 
-// ---- Store APIs (USER) ----
+// --- ADMIN API ---
 
-export function getStores(token, query = {}) {
-  const params = new URLSearchParams();
-  if (query.search) params.set("search", query.search);
-  if (query.sortBy) params.set("sortBy", query.sortBy);
-  if (query.sortOrder) params.set("sortOrder", query.sortOrder);
-  if (query.page) params.set("page", String(query.page));
-  if (query.pageSize) params.set("pageSize", String(query.pageSize));
+export function adminGetDashboard(token) {
+  return apiRequest("/admin/dashboard", "GET", null, token);
+}
 
-  const qs = params.toString();
-  const path = qs ? `/stores?${qs}` : "/stores";
+export function adminGetUsers(token, params = {}) {
+  // Convert params object to query string
+  const qs = new URLSearchParams(params).toString();
+  return apiRequest(`/admin/users?${qs}`, "GET", null, token);
+}
 
-  return apiRequest(path, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+export function adminCreateUser(token, data) {
+  return apiRequest("/admin/users", "POST", data, token);
+}
+
+export function adminGetStores(token, params = {}) {
+  const qs = new URLSearchParams(params).toString();
+  return apiRequest(`/admin/stores?${qs}`, "GET", null, token);
+}
+
+export function adminCreateStore(token, data) {
+  return apiRequest("/admin/stores", "POST", data, token);
+}
+
+// --- OWNER API ---
+
+export function ownerGetMyStore(token) {
+  return apiRequest("/owner/store", "GET", null, token);
+}
+
+export function ownerGetMyStoreRatings(token, params = {}) {
+  const qs = new URLSearchParams(params).toString();
+  return apiRequest(`/owner/store/ratings?${qs}`, "GET", null, token);
+}
+
+// --- USER API ---
+
+export function getStores(token, params = {}) {
+  const qs = new URLSearchParams(params).toString();
+  return apiRequest(`/stores?${qs}`, "GET", null, token);
 }
 
 export function rateStore(token, storeId, value) {
-  return apiRequest(`/stores/${storeId}/ratings`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: { value },
-  });
+  return apiRequest(`/stores/${storeId}/rate`, "POST", { value }, token);
 }
-
-export function getStoreDetails(token, storeId) {
-  return apiRequest(`/stores/${storeId}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
-// ---- Admin APIs ----
-
-export function adminGetDashboard(token) {
-  return apiRequest("/admin/dashboard", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
-export function adminGetUsers(token, query = {}) {
-  const params = new URLSearchParams();
-  if (query.search) params.set("search", query.search);
-  if (query.role) params.set("role", query.role);
-  if (query.sortBy) params.set("sortBy", query.sortBy);
-  if (query.sortOrder) params.set("sortOrder", query.sortOrder);
-  if (query.page) params.set("page", String(query.page));
-  if (query.pageSize) params.set("pageSize", String(query.pageSize));
-
-  const qs = params.toString();
-  const path = qs ? `/admin/users?${qs}` : "/admin/users";
-
-  return apiRequest(path, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
-export function adminCreateUser(token, payload) {
-  // { name, email, password, address, role }
-  return apiRequest("/admin/users", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: payload,
-  });
-}
-
-export function adminGetStores(token, query = {}) {
-  const params = new URLSearchParams();
-  if (query.search) params.set("search", query.search);
-  if (query.ownerId) params.set("ownerId", String(query.ownerId));
-  if (query.sortBy) params.set("sortBy", query.sortBy);
-  if (query.sortOrder) params.set("sortOrder", query.sortOrder);
-  if (query.page) params.set("page", String(query.page));
-  if (query.pageSize) params.set("pageSize", String(query.pageSize));
-
-  const qs = params.toString();
-  const path = qs ? `/admin/stores?${qs}` : "/admin/stores";
-
-  return apiRequest(path, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
-export function adminCreateStore(token, payload) {
-  // { name, email, address, ownerId }
-  return apiRequest("/admin/stores", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: payload,
-  });
-}
-
-// ---- Owner APIs ----
-
-export function ownerGetMyStore(token) {
-  return apiRequest("/owner/my-store", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
-export function ownerGetMyStoreRatings(token, query = {}) {
-  const params = new URLSearchParams();
-  if (query.page) params.set("page", String(query.page));
-  if (query.pageSize) params.set("pageSize", String(query.pageSize));
-  if (query.sortBy) params.set("sortBy", query.sortBy);
-  if (query.sortOrder) params.set("sortOrder", query.sortOrder);
-
-  const qs = params.toString();
-  const path = qs ? `/owner/my-store/ratings?${qs}` : "/owner/my-store/ratings";
-
-  return apiRequest(path, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
-export { apiRequest, API_BASE_URL };
